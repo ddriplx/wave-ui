@@ -1,0 +1,1100 @@
+1<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wave</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      width:100%; height:100%;
+    }
+    body {
+      background:#0e0e10;
+      display:flex;
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      opacity:0; transition:opacity .2s ease;
+    }
+    body.visible { opacity:1; }
+
+    /* WINDOW */
+    .window {
+      width:100%; height:100vh;
+      background:#1a1a1e; border-radius:0; overflow:hidden;
+      display:flex; flex-direction:column;
+      border:none;
+    }
+
+    /* TITLEBAR */
+    .titlebar {
+      height:44px; background:#141416;
+      display:flex; align-items:center;
+      padding:0 12px; gap:4px; flex-shrink:0;
+      border-bottom:1px solid #2a2a2f; user-select:none;
+    }
+    .titlebar-logo { width:30px; height:30px; display:flex; align-items:center; justify-content:center; margin-right:4px; }
+    .nav-tabs { display:flex; align-items:center; gap:2px; flex:1; }
+    .nav-tab {
+      display:flex; align-items:center; gap:6px;
+      padding:5px 14px; border-radius:5px; cursor:pointer;
+      font-size:13px; font-weight:500; color:#888;
+      transition:all .15s; border:none; background:transparent;
+    }
+    .nav-tab:hover { color:#ccc; background:#1e1e22; }
+    .nav-tab.active { background:#2a2a30; color:#fff; }
+    .nav-tab svg { width:15px; height:15px; opacity:.8; flex-shrink:0; }
+    .nav-tab.active svg { opacity:1; }
+    .titlebar-right { display:flex; align-items:center; gap:4px; margin-left:auto; }
+    .win-btn {
+      width:28px; height:28px; border-radius:4px; border:none;
+      background:transparent; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      color:#888; transition:background .15s,color .15s;
+    }
+    .win-btn:hover { background:#2a2a30; color:#fff; }
+    .win-btn.close:hover { background:#e74c3c; color:#fff; }
+
+    /* SECTIONS */
+    .sections { position:relative; flex:1; overflow:hidden; }
+    .section {
+      position:absolute; inset:0;
+      display:flex; flex-direction:column;
+      opacity:0; pointer-events:none;
+      transition:opacity .16s ease;
+    }
+    .section.active { opacity:1; pointer-events:all; }
+
+    /* HOME */
+    .home-body { display:flex; flex:1; overflow:hidden; }
+    .home-content { flex:1; padding:14px; display:flex; flex-direction:column; gap:12px; overflow:hidden; }
+    .top-cards { display:flex; gap:10px; height:150px; }
+    .welcome-card {
+      flex:1; background:#222228; border-radius:8px; padding:18px;
+      position:relative; overflow:hidden;
+      display:flex; flex-direction:column; justify-content:space-between;
+      border:1px solid #2e2e36;
+    }
+    /* welcome-char replaced by .anime-girl */
+    .welcome-card::before { content:''; position:absolute; right:120px; top:0; bottom:0; width:90px; background:linear-gradient(to right,#222228,transparent); z-index:1; pointer-events:none; }
+    .welcome-text { position:relative; z-index:2; }
+    .welcome-text p { font-size:15px; color:#d0d0d8; line-height:1.3; }
+    .welcome-text strong { font-size:17px; color:#fff; font-weight:700; display:block; margin-top:2px; }
+    .welcome-btns { display:flex; gap:8px; position:relative; z-index:2; }
+    .btn-website { padding:6px 18px; background:#3b8de8; color:#fff; border:none; border-radius:5px; font-size:13px; font-weight:500; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; transition:background .15s; }
+    .btn-website:hover { background:#2f7cd6; }
+    .btn-store { padding:6px 18px; background:#2e2e38; color:#c8c8d4; border:1px solid #3a3a44; border-radius:5px; font-size:13px; font-weight:500; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; transition:background .15s; }
+    .btn-store:hover { background:#36363f; }
+    .sub-card {
+      flex:1.4; background:#222228; border-radius:8px; padding:18px 20px;
+      position:relative; overflow:hidden;
+      display:flex; flex-direction:column; justify-content:center;
+      border:1px solid #2e2e36;
+    }
+    .sub-char { position:absolute; right:0; top:0; bottom:0; width:160px; background:linear-gradient(135deg,#1a1f30,#0f1520 50%,#0a0e18); opacity:.6; }
+    .sub-card::before { content:''; position:absolute; right:100px; top:0; bottom:0; width:100px; background:linear-gradient(to right,#222228,transparent); z-index:1; }
+    .sub-content { position:relative; z-index:2; }
+    .sub-title { font-size:13px; font-weight:700; color:#fff; letter-spacing:.08em; margin-bottom:8px; }
+    .sub-row { font-size:13px; color:#999; margin-bottom:4px; line-height:1.5; }
+    .sub-row .blue { color:#4a9eff; font-weight:500; }
+    .sub-date { font-size:13px; color:#888; margin-top:8px; }
+    .recent-section {
+      flex:1; background:#222228; border-radius:8px; overflow:hidden;
+      border:1px solid #2e2e36; display:flex; flex-direction:column;
+    }
+    .recent-header { padding:12px 16px 0; display:flex; align-items:center; gap:8px; }
+    .recent-title { font-size:13px; font-weight:700; color:#fff; letter-spacing:.04em; }
+    .recent-sub { font-size:12px; color:#666; }
+    .recent-table-header { display:flex; align-items:center; padding:8px 16px; border-bottom:1px solid #2a2a30; margin-top:8px; }
+    .col-name { flex:1; font-size:12px; color:#666; }
+    .col-modified { width:160px; font-size:12px; color:#666; }
+    .col-action { width:70px; }
+    .recent-row { display:flex; align-items:center; padding:10px 16px; border-bottom:1px solid #252528; transition:background .1s; }
+    .recent-row:hover { background:#26262c; }
+    .row-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; margin-right:10px; flex-shrink:0; }
+    .row-icon svg { width:14px; height:14px; color:#666; }
+    .row-name { flex:1; font-size:13px; color:#d0d0d8; }
+    .row-modified { width:160px; font-size:13px; color:#888; }
+    .row-action { width:70px; display:flex; justify-content:flex-end; }
+    .btn-edit { padding:5px 16px; background:#3b8de8; color:#fff; border:none; border-radius:5px; font-size:12px; font-weight:500; cursor:pointer; transition:background .15s; }
+    .btn-edit:hover { background:#2f7cd6; }
+    .list-end { text-align:center; padding:18px; font-size:13px; color:#555; }
+    .home-sidebar {
+      width:192px; background:#1a1a1e; padding:14px 12px;
+      display:flex; flex-direction:column; gap:10px;
+      border-left:1px solid #242428; flex-shrink:0;
+    }
+    .sidebar-title { font-size:13px; font-weight:700; color:#fff; letter-spacing:.06em; }
+    .sidebar-sub { font-size:12px; color:#777; margin-top:3px; line-height:1.4; }
+    .widget-card { background:#3b8de8; border-radius:7px; padding:12px; }
+    .widget-title { font-size:13px; font-weight:700; color:#fff; margin-bottom:5px; }
+    .widget-text { font-size:12px; color:rgba(255,255,255,.82); line-height:1.45; }
+
+    /* EDITOR — TAB BAR */
+    .tab-bar {
+      height:36px; background:#111113;
+      display:flex; align-items:center; padding:0 6px; gap:0;
+      border-bottom:1px solid #242428; flex-shrink:0;
+      overflow-x:auto; overflow-y:hidden;
+    }
+    .tab-bar::-webkit-scrollbar { height:2px; }
+    .tab-bar::-webkit-scrollbar-thumb { background:#333; border-radius:1px; }
+    .editor-tab {
+      display:flex; align-items:center; gap:5px;
+      padding:0 8px 0 10px; height:28px;
+      border-radius:5px; cursor:pointer;
+      font-size:12px; font-weight:500;
+      white-space:nowrap; flex-shrink:0;
+      transition:background .12s, color .12s;
+      color:#888; background:transparent;
+      border:none; position:relative;
+    }
+    .editor-tab svg { width:13px; height:13px; opacity:.7; flex-shrink:0; }
+    .editor-tab.active { background:#3b8de8; color:#fff; }
+    .editor-tab.active svg { opacity:1; }
+    .editor-tab:not(.active):hover { background:#1e1e24; color:#ccc; }
+    .tab-x {
+      width:16px; height:16px;
+      display:flex; align-items:center; justify-content:center;
+      border-radius:3px; border:none; background:transparent;
+      cursor:pointer; color:inherit; opacity:.5;
+      transition:opacity .12s, background .12s;
+      padding:0; margin-left:2px; flex-shrink:0;
+    }
+    .tab-x:hover { opacity:1; background:rgba(255,255,255,.2); }
+    .tab-add {
+      width:24px; height:24px; border-radius:4px; border:none;
+      background:transparent; cursor:pointer; margin-left:4px;
+      display:flex; align-items:center; justify-content:center;
+      color:#666; transition:all .15s; flex-shrink:0;
+    }
+    .tab-add:hover { background:#2a2a30; color:#aaa; }
+
+    /* EDITOR — MAIN */
+    .editor-main { flex:1; display:flex; overflow:hidden; background:#0d0d0f; }
+    #monaco-container { flex:1; overflow:hidden; }
+    .editor-right-sidebar {
+      width:192px; background:#141416;
+      display:flex; flex-direction:column;
+      border-left:1px solid #242428; flex-shrink:0;
+    }
+    .es-header { padding:14px 13px 6px; }
+    .es-title { font-size:13px; font-weight:700; color:#fff; letter-spacing:.06em; }
+    .es-sub { font-size:11px; color:#666; margin-top:3px; line-height:1.4; }
+    .es-search {
+      margin:8px 10px; background:#1e1e24; border:1px solid #2e2e38;
+      border-radius:5px; display:flex; align-items:center; padding:0 8px; height:28px;
+    }
+    .es-search svg { width:13px; height:13px; color:#555; flex-shrink:0; }
+    .es-search input { flex:1; background:transparent; border:none; outline:none; color:#ccc; font-size:12px; margin-left:6px; }
+    .ss-header { display:flex; align-items:center; padding:6px 10px; gap:4px; }
+    .ss-toggle { display:flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:#ccc; flex:1; cursor:pointer; }
+    .ss-toggle svg { width:11px; height:11px; color:#888; }
+    .ss-btn { width:20px; height:20px; border-radius:3px; border:none; background:#3b8de8; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; line-height:1; transition:background .15s; }
+    .ss-btn:hover { background:#2f7cd6; }
+    .script-item { display:flex; align-items:center; gap:7px; padding:6px 14px; cursor:pointer; transition:background .1s; }
+    .script-item:hover { background:#1e1e24; }
+    .script-item svg { width:14px; height:14px; color:#3b8de8; flex-shrink:0; }
+    .script-item span { font-size:12px; color:#c0c0cc; }
+
+    /* EDITOR — BOTTOM */
+    .bottom-bar {
+      height:46px; background:#111113; border-top:1px solid #242428;
+      display:flex; align-items:center; padding:0 10px; gap:7px; flex-shrink:0;
+    }
+    .btn { padding:6px 18px; border-radius:5px; border:none; font-size:13px; font-weight:500; cursor:pointer; transition:all .15s; }
+    .btn-execute { background:#3b8de8; color:#fff; }
+    .btn-execute:hover { background:#2f7cd6; }
+    .btn-dark { background:#252530; color:#c0c0cc; border:1px solid #35353f; }
+    .btn-dark:hover { background:#2e2e3a; color:#fff; }
+    .bottom-spacer { flex:1; }
+
+    /* SCRIPTS */
+    .search-bar { padding:10px 14px 6px; display:flex; align-items:center; gap:8px; flex-shrink:0; }
+    .search-wrap {
+      flex:1; background:#1e1e24; border:1px solid #2e2e38; border-radius:6px;
+      display:flex; align-items:center; padding:0 10px; height:32px; transition:border-color .15s;
+    }
+    .search-wrap:focus-within { border-color:#3b8de8; }
+    .search-wrap svg { width:14px; height:14px; color:#555; flex-shrink:0; }
+    .search-wrap input { flex:1; background:transparent; border:none; outline:none; color:#ccc; font-size:13px; margin-left:7px; }
+    .search-wrap input::placeholder { color:#555; }
+    .page-btn {
+      width:32px; height:32px; border-radius:5px;
+      background:#1e1e24; border:1px solid #2e2e38;
+      color:#888; cursor:pointer; display:flex; align-items:center; justify-content:center;
+      transition:all .15s; flex-shrink:0;
+    }
+    .page-btn:hover:not(:disabled) { background:#2a2a30; color:#fff; border-color:#3b8de8; }
+    .page-btn:disabled { opacity:.3; cursor:default; }
+    .grid-area { flex:1; overflow-y:auto; overflow-x:hidden; padding:8px 14px 14px; }
+    .grid-area::-webkit-scrollbar { width:5px; }
+    .grid-area::-webkit-scrollbar-thumb { background:#333; border-radius:3px; }
+    .script-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .script-card {
+      background:#111113; border:1px solid #252528; border-radius:8px;
+      overflow:hidden; cursor:pointer; transition:border-color .15s,transform .12s;
+      display:flex; flex-direction:column;
+    }
+    .script-card:hover { border-color:#3b8de8; transform:translateY(-1px); }
+    .card-thumb { width:100%; aspect-ratio:16/9; background:#1a1a1e; overflow:hidden; flex-shrink:0; }
+    .card-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .card-thumb .no-img { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#1a1a20; }
+    .card-body { padding:9px 10px 6px; flex:1; display:flex; flex-direction:column; gap:2px; }
+    .card-title { font-size:12px; font-weight:600; color:#d0d0d8; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .card-game { font-size:11px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .card-badges { display:flex; align-items:center; gap:5px; margin-top:4px; }
+    .badge { font-size:10px; font-weight:600; padding:2px 6px; border-radius:3px; }
+    .badge.verified { background:rgba(59,141,232,.15); color:#4a9eff; }
+    .badge.unverified { background:rgba(255,255,255,.05); color:#555; }
+    .badge.free { background:rgba(34,197,94,.12); color:#4ade80; }
+    .card-actions { display:flex; gap:5px; padding:0 10px 9px; flex-shrink:0; flex-wrap:wrap; }
+    .card-btn { display:flex; align-items:center; gap:4px; padding:5px 9px; border-radius:4px; border:none; font-size:11px; font-weight:500; cursor:pointer; transition:all .15s; }
+    .card-btn svg { width:11px; height:11px; flex-shrink:0; }
+    .card-btn.exec { background:#3b8de8; color:#fff; }
+    .card-btn.exec:hover { background:#2f7cd6; }
+    .card-btn.copy { background:#252530; color:#aaa; border:1px solid #35353f; }
+    .card-btn.copy:hover { background:#2e2e3a; color:#fff; }
+    .card-btn.send { background:#1e2e1e; color:#4ade80; border:1px solid #2a3f2a; }
+    .card-btn.send:hover { background:#253525; color:#6aee9a; }
+    .card-btn.view { background:#252530; color:#aaa; border:1px solid #35353f; }
+    .card-btn.view:hover { background:#2e2e3a; color:#fff; }
+    .grid-state { grid-column:1/-1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:40px 0; color:#555; }
+    .grid-state p { font-size:13px; }
+    .spinner { width:28px; height:28px; border:2px solid #2a2a30; border-top-color:#3b8de8; border-radius:50%; animation:spin .7s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* DIALOGS / OVERLAYS */
+    .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:200; align-items:center; justify-content:center; }
+    .overlay.show { display:flex; }
+    .dialog { background:#1e1e24; border:1px solid #35353f; border-radius:8px; padding:22px 24px; width:280px; box-shadow:0 12px 40px rgba(0,0,0,.5); }
+    .dialog h3 { font-size:14px; font-weight:700; color:#fff; margin-bottom:14px; }
+    .dialog input { width:100%; background:#141416; border:1px solid #35353f; border-radius:5px; color:#ccc; font-size:13px; padding:7px 10px; outline:none; margin-bottom:12px; transition:border-color .15s; }
+    .dialog input:focus { border-color:#3b8de8; }
+    .fmt-row { display:flex; gap:8px; margin-bottom:16px; }
+    .fmt-btn { flex:1; padding:6px; border-radius:5px; border:1px solid #35353f; background:#252530; color:#888; font-size:12px; font-weight:500; cursor:pointer; transition:all .15s; }
+    .fmt-btn.selected { background:#3b8de8; border-color:#3b8de8; color:#fff; }
+    .dlg-btns { display:flex; gap:8px; }
+    .dlg-cancel { flex:1; padding:7px; border-radius:5px; background:#252530; border:1px solid #35353f; color:#aaa; font-size:13px; cursor:pointer; transition:all .15s; }
+    .dlg-cancel:hover { background:#2e2e3a; color:#fff; }
+    .dlg-save { flex:1; padding:7px; border-radius:5px; background:#3b8de8; border:none; color:#fff; font-size:13px; font-weight:600; cursor:pointer; transition:background .15s; }
+    .dlg-save:hover { background:#2f7cd6; }
+    .modal { background:#1a1a1e; border:1px solid #2e2e38; border-radius:9px; width:540px; max-height:420px; display:flex; flex-direction:column; box-shadow:0 16px 50px rgba(0,0,0,.6); overflow:hidden; }
+    .modal-header { padding:14px 16px; border-bottom:1px solid #242428; display:flex; align-items:center; gap:8px; }
+    .modal-title { flex:1; font-size:13px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .modal-close { width:24px; height:24px; border-radius:4px; border:none; background:transparent; color:#888; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+    .modal-close:hover { background:#2a2a30; color:#fff; }
+    .modal-body { flex:1; overflow-y:auto; padding:14px 16px; }
+    .modal-body pre { font-family:'Fira Code',Consolas,monospace; font-size:12px; color:#c0c0cc; white-space:pre-wrap; line-height:1.6; }
+    .modal-footer { padding:10px 16px; border-top:1px solid #242428; display:flex; gap:8px; justify-content:flex-end; }
+    .modal-btn { padding:6px 16px; border-radius:5px; border:none; font-size:12px; font-weight:500; cursor:pointer; transition:all .15s; }
+    .modal-btn.primary { background:#3b8de8; color:#fff; }
+    .modal-btn.primary:hover { background:#2f7cd6; }
+    .modal-btn.secondary { background:#252530; color:#aaa; border:1px solid #35353f; }
+    .modal-btn.secondary:hover { background:#2e2e3a; color:#fff; }
+    .modal-btn.green { background:#1e3a1e; color:#4ade80; border:1px solid #2a4a2a; }
+    .modal-btn.green:hover { background:#253525; }
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#3b8de8; color:#fff; padding:8px 18px; border-radius:6px; font-size:13px; font-weight:500; opacity:0; transition:opacity .2s; pointer-events:none; z-index:999; white-space:nowrap; }
+    .toast.show { opacity:1; }
+
+    /* ── SECTION ANIMATION ── */
+    .section { transition:opacity .18s ease, transform .18s ease; transform:translateY(6px); }
+    .section.active { transform:translateY(0); }
+
+    /* ── TAB SLIDE-IN ── */
+    @keyframes tabSlideIn { from { opacity:0; transform:translateX(10px) scale(.95); } to { opacity:1; transform:translateX(0) scale(1); } }
+    .editor-tab.new-tab { animation:tabSlideIn .18s ease forwards; }
+
+    /* ── CARD FADE-IN ── */
+    @keyframes cardFadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+    .script-card { opacity:0; }
+    .script-card.visible { animation:cardFadeUp .22s ease forwards; }
+
+    /* ── ANIME GIRL ── */
+    .anime-girl {
+      position:absolute; right:0; top:0; bottom:0; width:200px;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden; pointer-events:none; z-index:0;
+    }
+    .anime-girl img { height:100%; width:auto; object-fit:contain; opacity:.92; filter:drop-shadow(-6px 0 18px rgba(59,141,232,.35)); }
+    .welcome-card::before { content:''; position:absolute; right:140px; top:0; bottom:0; width:80px; background:linear-gradient(to right,#222228,transparent); z-index:1; }
+
+    /* ── TOGGLE SWITCH ── */
+    .toggle-wrap { display:flex; align-items:center; justify-content:space-between; padding:16px 0; border-bottom:1px solid #232328; }
+    .toggle-wrap:last-child { border-bottom:none; }
+    .toggle-info { flex:1; padding-right:20px; }
+    .toggle-label { font-size:14px; font-weight:600; color:#e0e0e8; margin-bottom:3px; }
+    .toggle-desc { font-size:12px; color:#666; line-height:1.4; }
+    .toggle { position:relative; width:38px; height:20px; flex-shrink:0; }
+    .toggle input { opacity:0; width:0; height:0; }
+    .toggle-slider {
+      position:absolute; inset:0; background:#252530; border-radius:10px;
+      cursor:pointer; transition:background .2s;
+      border:1px solid #35353f;
+    }
+    .toggle-slider::before {
+      content:''; position:absolute; height:14px; width:14px;
+      left:2px; bottom:2px; background:#888; border-radius:50%;
+      transition:transform .2s, background .2s;
+    }
+    .toggle input:checked + .toggle-slider { background:#3b8de8; border-color:#3b8de8; }
+    .toggle input:checked + .toggle-slider::before { transform:translateX(18px); background:#fff; }
+
+    /* ── SETTINGS PANEL ── */
+    .settings-body { display:flex; flex:1; overflow:hidden; }
+    .settings-content { flex:1; overflow-y:auto; padding:20px 24px; }
+    .settings-content::-webkit-scrollbar { width:5px; }
+    .settings-content::-webkit-scrollbar-thumb { background:#333; border-radius:3px; }
+    .settings-group { display:none; }
+    .settings-group.active { display:block; }
+    .settings-group-title { font-size:20px; font-weight:700; color:#fff; margin-bottom:20px; }
+    .settings-sidebar {
+      width:192px; background:#141416; padding:16px 12px;
+      display:flex; flex-direction:column; gap:6px;
+      border-left:1px solid #242428; flex-shrink:0;
+    }
+    .settings-sidebar-head { margin-bottom:8px; }
+    .settings-sidebar-title { font-size:13px; font-weight:700; color:#fff; letter-spacing:.06em; }
+    .settings-sidebar-sub { font-size:11px; color:#666; margin-top:3px; line-height:1.4; }
+    .settings-nav-item {
+      display:flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:6px; cursor:pointer;
+      font-size:13px; font-weight:500; color:#888;
+      transition:all .15s; border:none; background:transparent; width:100%;
+    }
+    .settings-nav-item:hover { color:#ccc; background:#1e1e24; }
+    .settings-nav-item.active { background:#3b8de8; color:#fff; }
+    .settings-nav-item svg { width:14px; height:14px; flex-shrink:0; }
+    .setting-input {
+      background:#141416; border:1px solid #35353f; border-radius:5px;
+      color:#ccc; font-size:13px; padding:5px 10px; outline:none;
+      width:80px; text-align:center; transition:border-color .15s;
+    }
+    .setting-input:focus { border-color:#3b8de8; }
+    .settings-action-btn {
+      padding:8px 18px; border-radius:6px; border:none;
+      font-size:13px; font-weight:500; cursor:pointer; transition:all .15s;
+    }
+    .settings-action-btn.danger { background:#2a1515; color:#e74c3c; border:1px solid #3a1f1f; }
+    .settings-action-btn.danger:hover { background:#3a1f1f; }
+    .settings-action-btn.normal { background:#252530; color:#c0c0cc; border:1px solid #35353f; }
+    .settings-action-btn.normal:hover { background:#2e2e3a; color:#fff; }
+    .color-swatches { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .color-swatch {
+      width:28px; height:28px; border-radius:6px; cursor:pointer;
+      border:2px solid transparent; transition:border-color .15s, transform .1s;
+    }
+    .color-swatch:hover { transform:scale(1.1); }
+    .color-swatch.selected { border-color:#fff; }
+  </style>
+</head>
+<body>
+
+<input type="file" id="fileInput" accept=".txt,.lua" style="display:none" />
+
+<!-- Save Dialog -->
+<div class="overlay" id="saveOverlay">
+  <div class="dialog">
+    <h3>Save Script</h3>
+    <input type="text" id="saveFilename" placeholder="filename" value="script" />
+    <div class="fmt-row">
+      <button class="fmt-btn selected" data-ext="lua">&#46;lua</button>
+      <button class="fmt-btn" data-ext="txt">&#46;txt</button>
+    </div>
+    <div class="dlg-btns">
+      <button class="dlg-cancel" id="dlgCancel">Cancel</button>
+      <button class="dlg-save" id="dlgSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- View Script Modal -->
+<div class="overlay" id="viewOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Script</span>
+      <button class="modal-close" id="modalClose">
+        <svg width="10" height="10" viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.5"><line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/></svg>
+      </button>
+    </div>
+    <div class="modal-body"><pre id="modalCode"></pre></div>
+    <div class="modal-footer">
+      <button class="modal-btn secondary" id="modalCloseBtn">Close</button>
+      <button class="modal-btn green" id="modalSendBtn">Send to Editor</button>
+      <button class="modal-btn primary" id="modalCopyBtn">Copy</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- WINDOW -->
+<div class="window">
+
+  <!-- Shared Titlebar -->
+  <div class="titlebar">
+    <div class="titlebar-logo">
+      <svg viewBox="0 0 24 24" fill="none" width="26" height="26">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#c0c0d0" stroke="#c0c0d0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-section="home">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3z"/></svg>
+        HOME
+      </button>
+      <button class="nav-tab" data-section="editor">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"/></svg>
+        EDITOR
+      </button>
+      <button class="nav-tab" data-section="scripts">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/></svg>
+        SCRIPTS
+      </button>
+      <button class="nav-tab" data-section="settings">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/></svg>
+      </button>
+    </div>
+    <div class="titlebar-right">
+      <button class="win-btn"><svg width="10" height="2" viewBox="0 0 10 2" fill="currentColor"><rect width="10" height="1.5" rx=".75"/></svg></button>
+      <button class="win-btn"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.2"><rect x=".75" y=".75" width="8.5" height="8.5" rx="1"/></svg></button>
+      <button class="win-btn close"><svg width="10" height="10" viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.5"><line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/></svg></button>
+    </div>
+  </div>
+
+  <!-- SECTIONS -->
+  <div class="sections">
+
+    <!-- HOME -->
+    <div class="section active" id="section-home">
+      <div class="home-body">
+        <div class="home-content">
+          <div class="top-cards">
+            <div class="welcome-card">
+              <div class="anime-girl"><img src="https://www.pngall.com/wp-content/uploads/5/Aesthetic-Anime-Girl-PNG-File-Download-Free.png" alt=""/></div>
+              <div class="welcome-text"><p>Welcome to Wave,</p><strong>skidleaks</strong></div>
+              <div class="welcome-btns">
+                <a class="btn-website" href="https://getwave.gg/" target="_blank" rel="noopener">Website</a>
+                <a class="btn-store" href="https://robloxcheatz.com/" target="_blank" rel="noopener">Store</a>
+              </div>
+            </div>
+            <div class="sub-card" style="position:relative;overflow:hidden;">
+              <div style="position:absolute;right:8px;bottom:0;width:95px;display:flex;align-items:flex-end;overflow:hidden;pointer-events:none;z-index:0;">
+                <img src="https://www.pngall.com/wp-content/uploads/5/Aesthetic-Anime-Girl-PNG-Free-Image.png" alt="" style="height:100%;width:auto;max-height:120px;object-fit:contain;opacity:.88;filter:drop-shadow(-4px 0 12px rgba(59,141,232,.3));">
+              </div>
+              <div class="sub-char"></div>
+              <div class="sub-content">
+                <div class="sub-title">SUBSCRIPTION</div>
+                <div class="sub-row">Key Expiry: <span class="blue">Lifetime</span></div>
+                <div class="sub-row">Plan: Paid</div>
+                <div class="sub-date">31/12/2099</div>
+              </div>
+            </div>
+          </div>
+          <div class="recent-section">
+            <div class="recent-header">
+              <span class="recent-title">RECENT</span>
+              <span class="recent-sub">Edited</span>
+            </div>
+            <div class="recent-table-header">
+              <span class="col-name">Name</span>
+              <span class="col-modified">Last Modified</span>
+              <span class="col-action"></span>
+            </div>
+            <div class="recent-row">
+              <div class="row-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.825a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31L.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3zm-8.322.12C1.72 3.042 1.95 3 2.19 3h5.396l-.707-.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 1v.12z"/></svg></div>
+              <span class="row-name" id="homeTabName">Unitted Tab</span>
+              <span class="row-modified">Just now</span>
+              <div class="row-action"><button class="btn-edit" onclick="navigate('editor')">Edit</button></div>
+            </div>
+            <div class="list-end">You've reached the end of the list</div>
+          </div>
+        </div>
+        <div class="home-sidebar">
+          <div>
+            <div class="sidebar-title">WIDGETS</div>
+            <div class="sidebar-sub">View the latest Wave updates</div>
+          </div>
+          <div class="widget-card">
+            <div class="widget-title">Updates</div>
+            <div class="widget-text">wave bought fusion and pasted everything from it</div>
+          </div>
+          <div class="widget-card">
+            <div class="widget-title">Status</div>
+            <div class="widget-text">wave currently detected and outdated asf</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR -->
+    <div class="section" id="section-editor">
+      <div class="tab-bar" id="tabBar">
+        <!-- tabs rendered by JS -->
+        <button class="tab-add" id="tabAddBtn" title="New tab">
+          <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.8"><line x1="7" y1="2" x2="7" y2="12"/><line x1="2" y1="7" x2="12" y2="7"/></svg>
+        </button>
+      </div>
+      <div class="editor-main">
+        <div id="monaco-container"></div>
+        <div class="editor-right-sidebar">
+          <div class="es-header">
+            <div class="es-title">EXPLORER</div>
+            <div class="es-sub">Explore your saved scripts</div>
+          </div>
+          <div class="es-search">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+            <input type="text" placeholder="Search scripts..." />
+          </div>
+          <div class="ss-header">
+            <div class="ss-toggle">
+              <svg viewBox="0 0 16 16" fill="currentColor"><path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></svg>
+              Saved Scripts
+            </div>
+            <button class="ss-btn">+</button>
+          </div>
+          <div class="script-item">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.825a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31L.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3zm-8.322.12C1.72 3.042 1.95 3 2.19 3h5.396l-.707-.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 1v.12z"/></svg>
+            <span>Infinite Yield</span>
+          </div>
+        </div>
+      </div>
+      <div class="bottom-bar">
+        <button class="btn btn-execute" id="execBtn">Execute</button>
+        <button class="btn btn-dark" id="clearBtn">Clear</button>
+        <button class="btn btn-dark" id="openBtn">Open</button>
+        <button class="btn btn-dark" id="saveBtn">Save</button>
+        <div class="bottom-spacer"></div>
+      </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <div class="section" id="section-scripts">
+      <div class="search-bar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+          <input type="text" id="sbSearch" placeholder="Search scripts..." />
+        </div>
+
+      </div>
+      <div class="grid-area">
+        <div class="script-grid" id="scriptGrid">
+          <div class="grid-state"><p style="color:#555">Click the SCRIPTS tab to load scripts</p></div>
+        </div>
+        <div id="sbSentinel" style="height:40px;display:flex;align-items:center;justify-content:center;grid-column:1/-1;"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="section" id="section-settings">
+      <div class="settings-body">
+        <div class="settings-content">
+          <!-- APPLICATION -->
+          <div class="settings-group active" id="sg-application">
+            <div class="settings-group-title">Application</div>
+            <div class="toggle-wrap">
+              <div class="toggle-info"><div class="toggle-label">Topmost</div><div class="toggle-desc">Allow Wave to position itself over everything else</div></div>
+              <label class="toggle"><input type="checkbox" id="s-topmost"/><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle-info"><div class="toggle-label">Start on Boot</div><div class="toggle-desc">Automatically have Wave run when your system boots</div></div>
+              <label class="toggle"><input type="checkbox" id="s-boot"/><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle-info"><div class="toggle-label">Minimap</div><div class="toggle-desc">Toggle the code minimap in the editor</div></div>
+              <label class="toggle"><input type="checkbox" id="s-minimap"/><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle-info"><div class="toggle-label">Transparency</div><div class="toggle-desc">Adjust Wave's window transparency (from 0.1 to 1)</div></div>
+              <input type="number" class="setting-input" id="s-opacity" min="0.1" max="1" step="0.05" value="1"/>
+            </div>
+          </div>
+          <!-- APPEARANCE -->
+          <div class="settings-group" id="sg-appearance">
+            <div class="settings-group-title">Appearance</div>
+            <div class="toggle-wrap">
+              <div class="toggle-info"><div class="toggle-label">Accent Color</div><div class="toggle-desc">Choose Wave's primary accent color</div></div>
+              <div class="color-swatches" id="accentSwatches">
+                <div class="color-swatch selected" data-color="#3b8de8" style="background:#3b8de8"></div>
+                <div class="color-swatch" data-color="#9b59b6" style="background:#9b59b6"></div>
+                <div class="color-swatch" data-color="#e74c3c" style="background:#e74c3c"></div>
+                <div class="color-swatch" data-color="#2ecc71" style="background:#2ecc71"></div>
+                <div class="color-swatch" data-color="#f39c12" style="background:#f39c12"></div>
+                <div class="color-swatch" data-color="#1abc9c" style="background:#1abc9c"></div>
+              </div>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle-info"><div class="toggle-label">Editor Font Size</div><div class="toggle-desc">Set the Monaco editor font size (10-20px)</div></div>
+              <input type="number" class="setting-input" id="s-fontsize" min="10" max="20" step="1" value="13"/>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle-info"><div class="toggle-label">Smooth Animations</div><div class="toggle-desc">Enable smooth section and card animations</div></div>
+              <label class="toggle"><input type="checkbox" id="s-animations" checked/><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+          <!-- DATA -->
+          <div class="settings-group" id="sg-data">
+            <div class="settings-group-title">Data</div>
+            <div class="toggle-wrap">
+              <div class="toggle-info"><div class="toggle-label">Clear Script Cache</div><div class="toggle-desc">Remove all cached ScriptBlox results</div></div>
+              <button class="settings-action-btn normal" onclick="showToast('Cache cleared!')">Clear</button>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle-info"><div class="toggle-label">Reset All Settings</div><div class="toggle-desc">Restore all settings to their defaults</div></div>
+              <button class="settings-action-btn danger" id="resetSettingsBtn">Reset</button>
+            </div>
+            <div class="toggle-wrap">
+              <div class="toggle-info"><div class="toggle-label">Version</div><div class="toggle-desc">Wave UI</div></div>
+              <span style="font-size:12px;color:#555;">v1.0.0</span>
+            </div>
+          </div>
+        </div>
+        <div class="settings-sidebar">
+          <div class="settings-sidebar-head">
+            <div class="settings-sidebar-title">SETTINGS</div>
+            <div class="settings-sidebar-sub">Customize Wave to your liking</div>
+          </div>
+          <button class="settings-nav-item active" data-sg="application">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3z"/></svg>
+            Application
+          </button>
+          <button class="settings-nav-item" data-sg="appearance">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm4 3a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM5.5 7a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm.5 6a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/><path d="M16 8c0 3.15-1.866 2.585-3.567 2.07C11.42 9.763 10.465 9.5 8 9.5c-2.464 0-3.42.263-4.433.57C1.866 10.585 0 11.15 0 8a8 8 0 1 1 16 0z"/></svg>
+            Appearance
+          </button>
+          <button class="settings-nav-item" data-sg="data">
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 2.5A2.5 2.5 0 0 1 3.5 0h8.999A2.5 2.5 0 0 1 15 2.5v10.042a2.5 2.5 0 0 1-2.5 2.5H8.5a.5.5 0 0 1 0-1h4a1.5 1.5 0 0 0 1.5-1.5V2.5A1.5 1.5 0 0 0 12.499 1H3.5A1.5 1.5 0 0 0 2 2.5V10a.5.5 0 0 1-1 0V2.5z"/><path d="M7.646 7.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 8.707V14.5a.5.5 0 0 1-1 0V8.707L6.354 9.854a.5.5 0 1 1-.708-.708l2-2z"/></svg>
+            Data
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+<script>
+/* ====== TABS ====== */
+let tabs = [{ id: 1, name: 'Unitted Tab', content: '' }];
+let activeTab = 1;
+let tabCounter = 1;
+let editor = null;
+let monacoReady = false;
+
+function renderTabs() {
+  const bar = document.getElementById('tabBar');
+  const addBtn = document.getElementById('tabAddBtn');
+  // Remove old tab elements (not the add button)
+  bar.querySelectorAll('.editor-tab').forEach(el => el.remove());
+  tabs.forEach(tab => {
+    const el = document.createElement('button');
+    el.className = 'editor-tab' + (tab.id === activeTab ? ' active' : '') + (tab.isNew ? ' new-tab' : ''); tab.isNew = false;
+    el.dataset.tabId = tab.id;
+    el.innerHTML = `
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.825a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31L.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3zm-8.322.12C1.72 3.042 1.95 3 2.19 3h5.396l-.707-.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 1v.12z"/></svg>
+      <span>${esc(tab.name)}</span>
+      <button class="tab-x" data-close="${tab.id}"><svg width="8" height="8" viewBox="0 0 8 8" stroke="currentColor" stroke-width="1.5"><line x1="1" y1="1" x2="7" y2="7"/><line x1="7" y1="1" x2="1" y2="7"/></svg></button>`;
+    el.addEventListener('click', function(e) {
+      if (e.target.closest('[data-close]')) return;
+      switchTab(tab.id);
+    });
+    el.querySelector('[data-close]').addEventListener('click', e => {
+      e.stopPropagation();
+      closeTab(tab.id);
+    });
+    bar.insertBefore(el, addBtn);
+  });
+  // Update home recent tab name
+  const firstTab = tabs.find(t => t.id === activeTab);
+  if (firstTab) document.getElementById('homeTabName').textContent = firstTab.name;
+}
+
+function switchTab(id) {
+  // Save current content
+  if (editor && monacoReady) {
+    const cur = tabs.find(t => t.id === activeTab);
+    if (cur) cur.content = editor.getValue();
+  }
+  activeTab = id;
+  const tab = tabs.find(t => t.id === id);
+  if (editor && monacoReady && tab) {
+    editor.setValue(tab.content);
+    editor.setPosition({ lineNumber: 1, column: 1 });
+  }
+  renderTabs();
+}
+
+function closeTab(id) {
+  if (tabs.length === 1) { showToast("Can't close the last tab"); return; }
+  const idx = tabs.findIndex(t => t.id === id);
+  tabs.splice(idx, 1);
+  if (activeTab === id) {
+    const next = tabs[Math.min(idx, tabs.length - 1)];
+    activeTab = next.id;
+    if (editor && monacoReady) {
+      editor.setValue(next.content);
+      editor.setPosition({ lineNumber: 1, column: 1 });
+    }
+  }
+  renderTabs();
+}
+
+function newTab(name, content) {
+  if (editor && monacoReady) {
+    const cur = tabs.find(t => t.id === activeTab);
+    if (cur) cur.content = editor.getValue();
+  }
+  tabCounter++;
+  const tab = { id: tabCounter, name: name || 'Unitted Tab', content: content || '', isNew: true };
+  tabs.push(tab);
+  activeTab = tab.id;
+  if (editor && monacoReady) {
+    editor.setValue(tab.content);
+    editor.setPosition({ lineNumber: 1, column: 1 });
+  }
+  renderTabs();
+  return tab;
+}
+
+document.getElementById('tabAddBtn').addEventListener('click', () => newTab());
+
+/* ====== NAVIGATION ====== */
+let sbLoaded = false;
+
+function navigate(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  document.querySelectorAll('.nav-tab[data-section]').forEach(b => b.classList.toggle('active', b.dataset.section === id));
+  if (id === 'editor' && editor) setTimeout(() => editor.layout(), 20);
+  if (id === 'scripts' && !sbLoaded) { sbLoaded = true; fetchMoreScripts(); }
+}
+
+document.querySelectorAll('.nav-tab[data-section]').forEach(btn => {
+  btn.addEventListener('click', () => navigate(btn.dataset.section));
+});
+
+/* ====== MONACO ====== */
+require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } });
+require(['vs/editor/editor.main'], function() {
+  monaco.languages.register({ id: 'lua' });
+  monaco.languages.setMonarchTokensProvider('lua', {
+    keywords: ['and','break','do','else','elseif','end','false','for','function','if','in','local','nil','not','or','repeat','return','then','true','until','while'],
+    tokenizer: {
+      root: [
+        [/--.*$/, 'comment'],
+        [/"([^"\\]|\\.)*"/, 'string'],
+        [/'([^'\\]|\\.)*'/, 'string'],
+        [/\d+\.?\d*/, 'number'],
+        [/[a-zA-Z_]\w*/, { cases: { '@keywords': 'keyword', '@default': 'identifier' } }],
+      ]
+    }
+  });
+  editor = monaco.editor.create(document.getElementById('monaco-container'), {
+    value: '',
+    language: 'lua', theme: 'vs-dark',
+    fontSize: 13,
+    fontFamily: '"Cascadia Code","Fira Code","JetBrains Mono",Consolas,monospace',
+    fontLigatures: true,
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    lineNumbersMinChars: 2,
+    padding: { top: 10, bottom: 10 },
+    smoothScrolling: true,
+    cursorBlinking: 'smooth',
+    cursorSmoothCaretAnimation: 'on',
+    renderLineHighlight: 'gutter',
+    overviewRulerLanes: 0,
+    scrollbar: { verticalScrollbarSize: 6, horizontalScrollbarSize: 6 }
+  });
+  window.addEventListener('resize', () => editor.layout());
+  monacoReady = true;
+  renderTabs();
+
+  // Typing animation on first tab
+  const welcome = '-- Welcome to Wave! Fixed by @veroxide.';
+  let i = 0;
+  const tick = setInterval(() => {
+    if (i <= welcome.length) {
+      const cur = tabs.find(t => t.id === activeTab);
+      if (cur) cur.content = welcome.slice(0, i);
+      editor.setValue(cur ? cur.content : '');
+      const m = editor.getModel();
+      editor.setPosition({ lineNumber: m.getLineCount(), column: m.getLineMaxColumn(m.getLineCount()) });
+      i++;
+    } else { clearInterval(tick); }
+  }, 38);
+});
+
+/* ====== EDITOR ACTIONS ====== */
+document.getElementById('clearBtn').addEventListener('click', () => {
+  if (editor) { editor.setValue(''); const cur = tabs.find(t => t.id === activeTab); if (cur) cur.content = ''; }
+});
+document.getElementById('openBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change', function() {
+  const file = this.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const name = file.name.replace(/\.(lua|txt)$/, '');
+    newTab(name, ev.target.result);
+  };
+  reader.readAsText(file);
+  this.value = '';
+});
+document.getElementById('execBtn').addEventListener('click', () => showToast('Execute not yet connected.'));
+document.getElementById('saveBtn').addEventListener('click', openSave);
+
+let saveExt = 'lua';
+function openSave() {
+  const cur = tabs.find(t => t.id === activeTab);
+  document.getElementById('saveFilename').value = (cur ? cur.name : 'script').replace(/\.(lua|txt)$/, '');
+  document.getElementById('saveOverlay').classList.add('show');
+  document.getElementById('saveFilename').focus();
+}
+document.getElementById('dlgCancel').addEventListener('click', () => document.getElementById('saveOverlay').classList.remove('show'));
+document.getElementById('saveOverlay').addEventListener('click', e => { if (e.target === document.getElementById('saveOverlay')) document.getElementById('saveOverlay').classList.remove('show'); });
+document.getElementById('saveFilename').addEventListener('keydown', e => { if (e.key === 'Enter') confirmSave(); if (e.key === 'Escape') document.getElementById('saveOverlay').classList.remove('show'); });
+document.querySelectorAll('.fmt-btn').forEach(b => b.addEventListener('click', function() {
+  document.querySelectorAll('.fmt-btn').forEach(x => x.classList.remove('selected'));
+  this.classList.add('selected'); saveExt = this.dataset.ext;
+}));
+document.getElementById('dlgSave').addEventListener('click', confirmSave);
+function confirmSave() {
+  if (!editor) return;
+  let name = (document.getElementById('saveFilename').value.trim() || 'script').replace(/\.(lua|txt)$/, '');
+  const cur = tabs.find(t => t.id === activeTab);
+  if (cur) cur.name = name;
+  renderTabs();
+  const blob = new Blob([editor.getValue()], { type: 'text/plain' });
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: name + '.' + saveExt });
+  a.click(); URL.revokeObjectURL(a.href);
+  document.getElementById('saveOverlay').classList.remove('show');
+}
+
+/* ====== SCRIPTBLOX ====== */
+let sbPage = 1, sbQuery = 'Script', sbTotal = 1, sbFetching = false;
+let currentModalCode = '', currentModalTitle = '';
+
+document.getElementById('sbSearch').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    sbPage = 1; sbTotal = 1; sbQuery = e.target.value.trim() || 'Script';
+    var grid = document.getElementById('scriptGrid');
+    grid.innerHTML = '<div class="grid-state"><div class="spinner"></div><p>Loading scripts...</p></div>';
+    fetchMoreScripts();
+  }
+});
+
+async function fetchMoreScripts() {
+  if (sbFetching || sbPage > sbTotal) return;
+  sbFetching = true;
+  var sentinel = document.getElementById('sbSentinel');
+  sentinel.innerHTML = '<div class="spinner"></div>';
+  try {
+    var onBackend = window.location.pathname.startsWith('/api/');
+    var sbDirectUrl = 'https://scriptblox.com/api/script/search?q=' + encodeURIComponent(sbQuery) + '&mode=free&max=20&page=' + sbPage;
+    var fetchUrl = onBackend
+      ? '/api/scriptblox?q=' + encodeURIComponent(sbQuery) + '&page=' + sbPage
+      : 'https://corsproxy.io/?' + encodeURIComponent(sbDirectUrl);
+    var res = await fetch(fetchUrl);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    var scripts = (data && data.result && data.result.scripts) ? data.result.scripts : [];
+    sbTotal = (data && data.result && data.result.totalPages) ? data.result.totalPages : 1;
+    var grid = document.getElementById('scriptGrid');
+    if (sbPage === 1 && !scripts.length) {
+      grid.innerHTML = '<div class="grid-state"><p>No scripts found</p></div>';
+      sentinel.innerHTML = '';
+      sbFetching = false; return;
+    }
+    if (sbPage === 1) grid.innerHTML = '';
+    scripts.forEach(function(s) { grid.appendChild(buildCard(s)); });
+    sbPage++;
+    sentinel.innerHTML = sbPage > sbTotal ? '<p style="color:#555;font-size:12px;padding:12px 0">All scripts loaded</p>' : '';
+  } catch (err) {
+    var grid = document.getElementById('scriptGrid');
+    if (sbPage === 1) grid.innerHTML = '<div class="grid-state"><p>Failed to load \u2014 ' + err.message + '</p></div>';
+    sentinel.innerHTML = '<p style="color:#e74c3c;font-size:12px;padding:12px 0">Error loading more</p>';
+  }
+  sbFetching = false;
+}
+
+// Infinite scroll via IntersectionObserver
+var sbObserver = new IntersectionObserver(function(entries) {
+  if (entries[0].isIntersecting) fetchMoreScripts();
+}, { threshold: 0.1 });
+sbObserver.observe(document.getElementById('sbSentinel'));
+
+function buildCard(script) {
+  var title = script.title || 'Untitled';
+  var gameName = (script.game && script.game.name) ? script.game.name : '';
+  var imageUrl = (script.game && script.game.imageUrl) ? script.game.imageUrl : '';
+  var verified = script.verified === true;
+  var code = script.script || '';
+  var card = document.createElement('div');
+  card.className = 'script-card';
+  var thumb = document.createElement('div');
+  thumb.className = 'card-thumb';
+  if (imageUrl) {
+    var img = document.createElement('img');
+    img.src = imageUrl; img.alt = gameName;
+    img.onerror = function() { thumb.innerHTML = '<div class="no-img"><svg viewBox="0 0 16 16" fill="currentColor" style="width:28px;height:28px;color:#333"><path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/><path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/></svg></div>'; };
+    thumb.appendChild(img);
+  } else {
+    thumb.innerHTML = '<div class="no-img"><svg viewBox="0 0 16 16" fill="currentColor" style="width:28px;height:28px;color:#333"><path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/><path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/></svg></div>';
+  }
+  var body = document.createElement('div');
+  body.className = 'card-body';
+  body.innerHTML = '<div class="card-title" title="' + esc(title) + '">' + esc(title) + '</div><div class="card-game">' + esc(gameName) + '</div><div class="card-badges"><span class="badge free">FREE</span><span class="badge ' + (verified ? 'verified' : 'unverified') + '">' + (verified ? 'Verified' : 'Unverified') + '</span></div>';
+  var actions = document.createElement('div');
+  actions.className = 'card-actions';
+  function mkBtn(cls, svgStr, label, fn) {
+    var b = document.createElement('button');
+    b.className = 'card-btn ' + cls;
+    b.innerHTML = svgStr + ' ' + label;
+    b.addEventListener('click', function(e) { e.stopPropagation(); fn(); });
+    return b;
+  }
+  actions.appendChild(mkBtn('exec', '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/></svg>', 'Execute', function() { showToast('Execute not yet connected.'); }));
+  actions.appendChild(mkBtn('copy', '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>', 'Copy', function() { navigator.clipboard.writeText(code).then(function() { showToast('Copied!'); }); }));
+  actions.appendChild(mkBtn('send', '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"/></svg>', 'Editor', function() { loadInEditor(title, code); }));
+  actions.appendChild(mkBtn('view', '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/></svg>', 'View', function() { openView(title, code); }));
+  card.appendChild(thumb); card.appendChild(body); card.appendChild(actions);
+  cardObserver.observe(card);
+  return card;
+}
+
+function loadInEditor(name, code) {
+  newTab(name || 'Script', code);
+  navigate('editor');
+  showToast('Loaded in editor!');
+}
+
+function openView(title, code) {
+  currentModalCode = code; currentModalTitle = title;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalCode').textContent = code;
+  document.getElementById('viewOverlay').classList.add('show');
+}
+function closeView() { document.getElementById('viewOverlay').classList.remove('show'); }
+document.getElementById('modalClose').addEventListener('click', closeView);
+document.getElementById('modalCloseBtn').addEventListener('click', closeView);
+document.getElementById('viewOverlay').addEventListener('click', function(e) { if (e.target === this) closeView(); });
+document.getElementById('modalCopyBtn').addEventListener('click', function() { navigator.clipboard.writeText(currentModalCode).then(function() { closeView(); showToast('Copied!'); }); });
+document.getElementById('modalSendBtn').addEventListener('click', function() { closeView(); loadInEditor(currentModalTitle, currentModalCode); });
+
+/* ====== TOAST ====== */
+var toastTimer;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { t.classList.remove('show'); }, 2200);
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+
+/* ====== SETTINGS ====== */
+var accentColor = '#3b8de8';
+var settingsDefaults = { topmost:false, boot:false, minimap:false, opacity:1, accent:'#3b8de8', fontsize:13, animations:true };
+
+function applyAccent(color) {
+  accentColor = color;
+  var style = document.getElementById('accentStyle') || document.createElement('style');
+  style.id = 'accentStyle';
+  style.textContent = [
+    '.nav-tab.active,.editor-tab.active,.btn-execute,.btn-edit,.btn-website,.card-btn.exec,.dlg-save,.modal-btn.primary,.ss-btn,.settings-nav-item.active,.widget-card { background:' + color + ' !important; }',
+    '.sub-row .blue { color:' + color + ' !important; }',
+    '.badge.verified { color:' + color + ' !important; }',
+    '.search-wrap:focus-within,.script-card:hover { border-color:' + color + ' !important; }',
+    '.spinner { border-top-color:' + color + ' !important; }',
+    '.toast,.page-btn:hover:not(:disabled) { border-color:' + color + '; }',
+    '.toggle input:checked + .toggle-slider { background:' + color + ' !important; border-color:' + color + ' !important; }',
+  ].join('\n');
+  document.head.appendChild(style);
+  document.querySelectorAll('.color-swatch').forEach(function(s) {
+    s.classList.toggle('selected', s.dataset.color === color);
+  });
+}
+
+function loadSettings() {
+  try { return JSON.parse(localStorage.getItem('waveSettings') || '{}'); } catch(e) { return {}; }
+}
+function saveSettings(key, val) {
+  var s = loadSettings(); s[key] = val;
+  localStorage.setItem('waveSettings', JSON.stringify(s));
+}
+
+function initSettings() {
+  var s = Object.assign({}, settingsDefaults, loadSettings());
+  document.getElementById('s-topmost').checked = s.topmost;
+  document.getElementById('s-boot').checked = s.boot;
+  document.getElementById('s-minimap').checked = s.minimap;
+  document.getElementById('s-opacity').value = s.opacity;
+  document.getElementById('s-fontsize').value = s.fontsize;
+  document.getElementById('s-animations').checked = s.animations;
+  applyAccent(s.accent || '#3b8de8');
+  document.querySelector('.window').style.opacity = s.opacity;
+  if (!s.animations) document.documentElement.style.setProperty('--anim-speed','0s');
+}
+
+document.getElementById('s-topmost').addEventListener('change', function() { saveSettings('topmost', this.checked); });
+document.getElementById('s-boot').addEventListener('change', function() { saveSettings('boot', this.checked); });
+document.getElementById('s-minimap').addEventListener('change', function() {
+  saveSettings('minimap', this.checked);
+  if (editor) editor.updateOptions({ minimap: { enabled: this.checked } });
+});
+document.getElementById('s-opacity').addEventListener('input', function() {
+  var v = Math.max(0.1, Math.min(1, parseFloat(this.value) || 1));
+  document.querySelector('.window').style.opacity = v;
+  saveSettings('opacity', v);
+});
+document.getElementById('s-fontsize').addEventListener('input', function() {
+  var v = Math.max(10, Math.min(20, parseInt(this.value) || 13));
+  if (editor) editor.updateOptions({ fontSize: v });
+  saveSettings('fontsize', v);
+});
+document.getElementById('s-animations').addEventListener('change', function() {
+  saveSettings('animations', this.checked);
+});
+document.querySelectorAll('.color-swatch').forEach(function(sw) {
+  sw.addEventListener('click', function() {
+    applyAccent(this.dataset.color);
+    saveSettings('accent', this.dataset.color);
+  });
+});
+document.getElementById('resetSettingsBtn').addEventListener('click', function() {
+  localStorage.removeItem('waveSettings');
+  initSettings();
+  if (editor) editor.updateOptions({ minimap:{enabled:false}, fontSize:13 });
+  showToast('Settings reset!');
+});
+
+// Settings sub-nav
+document.querySelectorAll('.settings-nav-item[data-sg]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.settings-nav-item').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.settings-group').forEach(function(g) { g.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('sg-' + btn.dataset.sg).classList.add('active');
+  });
+});
+
+/* ====== CARD SCROLL ANIMATIONS ====== */
+var cardObserver = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      cardObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.08 });
+
+
+/* ====== INIT ====== */
+renderTabs();
+initSettings();
+requestAnimationFrame(function() { document.body.classList.add('visible'); });
+</script>
+</body>
+</html>
