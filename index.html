@@ -890,18 +890,23 @@ async function fetchMoreScripts() {
   var sentinel = document.getElementById('sbSentinel');
   sentinel.innerHTML = '<div class="spinner"></div>';
   try {
-var onBackend = window.location.pathname.startsWith('/api/');
-var sbDirect = 'https://scriptblox.com/api/script/fetch?q=' + encodeURIComponent(sbQuery) + '&page=' + sbPage + '&max=20';
-var backendUrl = onBackend
-  ? '/api/scriptblox?q=' + encodeURIComponent(sbQuery) + '&page=' + sbPage
-  : 'https://corsproxy.io/?' + encodeURIComponent(sbDirect);
-    var data;
-    try {
-      var res = await fetch(backendUrl);
-      data = await res.json();
-    } catch(e) {
-      throw new Error('Failed to reach proxy: ' + e.message);
+    var directUrl = 'https://scriptblox.com/api/script/fetch?q=' + encodeURIComponent(sbQuery) + '&page=' + sbPage + '&max=20';
+    var proxies = [
+      directUrl,
+      'https://corsproxy.io/?' + encodeURIComponent(directUrl),
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(directUrl)
+    ];
+    var data = null;
+    var lastErr = '';
+    for (var pi = 0; pi < proxies.length; pi++) {
+      try {
+        var res = await fetch(proxies[pi]);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        data = await res.json();
+        break;
+      } catch(e) { lastErr = e.message; }
     }
+    if (!data) throw new Error('All sources failed: ' + lastErr);
     var scripts = (data && data.result && data.result.scripts) ? data.result.scripts : [];
     sbTotal = (data && data.result && data.result.totalPages) ? data.result.totalPages : 1;
     var grid = document.getElementById('scriptGrid');
