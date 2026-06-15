@@ -890,11 +890,11 @@ async function fetchMoreScripts() {
   var sentinel = document.getElementById('sbSentinel');
   sentinel.innerHTML = '<div class="spinner"></div>';
   try {
-    var onBackend = window.location.pathname.startsWith('/api/');
-    // Build the backend URL — use Replit server as proxy for GitHub Pages too
-    var backendUrl = onBackend
-      ? '/api/scriptblox?q=' + encodeURIComponent(sbQuery) + '&page=' + sbPage
-      : 'https://2c3b4113-515e-4b83-a529-39acaa11145b-00-2njo0c81cp9me.picard.replit.dev/api/scriptblox?q=' + encodeURIComponent(sbQuery) + '&page=' + sbPage;
+var onBackend = window.location.pathname.startsWith('/api/');
+var sbDirect = 'https://scriptblox.com/api/script/fetch?q=' + encodeURIComponent(sbQuery) + '&page=' + sbPage + '&max=20';
+var backendUrl = onBackend
+  ? '/api/scriptblox?q=' + encodeURIComponent(sbQuery) + '&page=' + sbPage
+  : 'https://corsproxy.io/?' + encodeURIComponent(sbDirect);
     var data;
     try {
       var res = await fetch(backendUrl);
